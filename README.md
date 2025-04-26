@@ -1,4 +1,4 @@
 # omnimatrix
-Monorepo for `omnimatrix`: A video matrix switcher abstraction.
+Monorepo for `omnimatrix`: A video matrix router abstraction.
 
 There isn't much to see, yet.

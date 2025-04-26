@@ -11,4 +11,8 @@ license = "GPL-3.0-only"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.98"
+futures-core = "0.3.31"
+tokio = { version = "1.44.2", features = ["rt-multi-thread", "time", "macros"] }
+tokio-stream = { version = "0.1.17", features = ["sync"] }
 

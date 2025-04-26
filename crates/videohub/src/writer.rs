@@ -73,31 +73,31 @@ impl VideohubMessage {
             VideohubMessage::VideoOutputRouting(v) => {
                 write!(w, "VIDEO OUTPUT ROUTING:\n")?;
                 for r in v {
-                    write!(w, "{} {}\n", r.from, r.to)?;
+                    write!(w, "{} {}\n", r.to_output, r.from_input)?;
                 }
             }
             VideohubMessage::VideoMonitoringOutputRouting(v) => {
                 write!(w, "VIDEO MONITORING OUTPUT ROUTING:\n")?;
                 for r in v {
-                    write!(w, "{} {}\n", r.from, r.to)?;
+                    write!(w, "{} {}\n", r.to_output, r.from_input)?;
                 }
             }
             VideohubMessage::SerialPortRouting(v) => {
                 write!(w, "SERIAL PORT ROUTING:\n")?;
                 for r in v {
-                    write!(w, "{} {}\n", r.from, r.to)?;
+                    write!(w, "{} {}\n", r.to_output, r.from_input)?;
                 }
             }
             VideohubMessage::ProcessingUnitRouting(v) => {
                 write!(w, "PROCESSING UNIT ROUTING:\n")?;
                 for r in v {
-                    write!(w, "{} {}\n", r.from, r.to)?;
+                    write!(w, "{} {}\n", r.to_output, r.from_input)?;
                 }
             }
             VideohubMessage::FrameBufferRouting(v) => {
                 write!(w, "FRAME BUFFER ROUTING:\n")?;
                 for r in v {
-                    write!(w, "{} {}\n", r.from, r.to)?;
+                    write!(w, "{} {}\n", r.to_output, r.from_input)?;
                 }
             }
             VideohubMessage::VideoOutputLocks(v) => {

@@ -89,8 +89,8 @@ pub struct Label {
 /// - `FRAME BUFFER ROUTING:`
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct Route {
-    pub from: u32,
-    pub to: u32,
+    pub from_input: u32,
+    pub to_output: u32,
 }
 
 /// Lock State

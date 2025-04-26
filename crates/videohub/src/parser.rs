@@ -86,14 +86,14 @@ fn parse_label_body<'a>(
     Ok((i, ctor(out)))
 }
 
-/// Parse generic "from to" route lines
+/// Parse generic "to from" route lines
 fn parse_route_body<'a>(
     mut i: &'a [u8],
     ctor: fn(Vec<Route>) -> VideohubMessage,
 ) -> IResult<&'a [u8], VideohubMessage> {
     let mut out = Vec::new();
-    while let Ok((i2, (f, _, t, _))) = tuple((parse_u32, space1, parse_u32, any_newline))(i) {
-        out.push(Route { from: f, to: t });
+    while let Ok((i2, (t, _, f, _))) = tuple((parse_u32, space1, parse_u32, any_newline))(i) {
+        out.push(Route { from_input: f, to_output: t });
         i = i2;
     }
     Ok((i, ctor(out)))

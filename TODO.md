@@ -1,5 +1,5 @@
 - Implement wire-protocols:
-  - [ ] Blackmagic Videohub Ethernet Protocol
+  - [x] Blackmagic Videohub Ethernet Protocol
   - [ ] Leitch Pass-through Protocol
   - [ ] Leitch Terminal Protocol
   - [ ] ATEN Video Matrix Switcher Protocol?

@@ -1,0 +1,12 @@
+[workspace]
+members = []
+
+[package]
+name = "omnimatrix"
+version = "0.1.0"
+authors = ["Adrian 'vifino' Pistol <vifino@posteo.net>"]
+license = "GPL-3.0-only"
+edition = "2021"
+
+[dependencies]
+

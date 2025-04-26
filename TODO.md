@@ -1,0 +1,15 @@
+- Implement wire-protocols:
+  - [ ] Blackmagic Videohub Ethernet Protocol
+  - [ ] Leitch Pass-through Protocol
+  - [ ] Leitch Terminal Protocol
+  - [ ] ATEN Video Matrix Switcher Protocol?
+- [ ] Generic Matrix Router Data Model and helpers
+- [ ] Generic Matrix Router Trait
+- [ ] Implement front-ends:
+  - [ ] Videohub
+  - [ ] Custom Websocket Protocol?
+- [ ] Implement Backends:
+  - [ ] Videohub
+  - [ ] Leitch Pass-through Protocol
+  - [ ] Leitch Terminal Protocol
+  - [ ] ATEN Video Matrix Switcher Protocol?

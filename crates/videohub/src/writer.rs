@@ -195,6 +195,7 @@ mod tests {
     use super::*;
 
     const BMD_EXAMPLE: &[u8] = include_bytes!("./bmd_example.txt");
+    const BMD_CLEANSWITCH: &[u8] = include_bytes!("./bmd_cleanswitch_12x12.txt");
 
     #[test]
     fn single_preamble() {
@@ -225,9 +226,23 @@ mod tests {
     }
 
     #[test]
-    fn roundtrip_blocks() {
+    fn roundtrip_blocks_bmd_example() {
         // parse the real example
         let (_rem, msgs) = VideohubMessage::parse_all_blocks(BMD_EXAMPLE).unwrap();
+        // reserialize all
+        let mut out = BytesMut::new();
+        for m in &msgs {
+            out.extend_from_slice(&m.to_serialized().unwrap());
+        }
+        // parse again
+        let (rem2, msgs2) = VideohubMessage::parse_all_blocks(&out).unwrap();
+        assert!(rem2.is_empty(), "leftover after round-trip");
+        assert_eq!(msgs, msgs2);
+    }
+    #[test]
+    fn roundtrip_blocks_cleanswitch() {
+        // parse the real example
+        let (_rem, msgs) = VideohubMessage::parse_all_blocks(BMD_CLEANSWITCH).unwrap();
         // reserialize all
         let mut out = BytesMut::new();
         for m in &msgs {

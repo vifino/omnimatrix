@@ -1,0 +1,75 @@
+PROTOCOL PREAMBLE:
+Version: 2.8
+
+VIDEOHUB DEVICE:
+Device present: true
+Model name: Smart Videohub CleanSwitch 12x12
+Friendly name: Smart Videohub CleanSwitch 12x12
+Unique ID: 7C2E0D0726A0
+Video inputs: 12
+Video processing units: 0
+Video outputs: 12
+Video monitoring outputs: 0
+Serial ports: 0
+
+INPUT LABELS:
+0 HyperDeck 1
+1 HyperDeck 2
+2 HyperDeck 3
+3 HyperDeck 4
+4 Camera 1
+5 Camera 2
+6 Camera 3
+7 Camera 4
+8 Input 9
+9 Input 10
+10 Input 11
+11 Input 12
+
+OUTPUT LABELS:
+0 Teranex AV 1
+1 Teranex AV 2
+2 Teranex AV 3
+3 Output 4
+4 SmartScope Duo
+5 SmartView 4K
+6 Output 7
+7 Output 8
+8 Output 9
+9 Output 10
+10 Output 11
+11 Output 12
+
+VIDEO OUTPUT LOCKS:
+0 U
+1 U
+2 U
+3 U
+4 U
+5 U
+6 U
+7 U
+8 U
+9 U
+10 U
+11 U
+
+VIDEO OUTPUT ROUTING:
+0 6
+1 3
+2 4
+3 9
+4 4
+5 1
+6 11
+7 11
+8 11
+9 11
+10 11
+11 0
+
+CONFIGURATION:
+Take Mode: false
+
+END PRELUDE:
+

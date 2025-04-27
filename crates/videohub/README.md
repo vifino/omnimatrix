@@ -9,6 +9,8 @@ but the logic of how to interpret these messages is up to the user.
 # See Also
 - [Videohub Developer Information][1]
 - [videohubctrl][2]
+- [Introduction to the Router Control Protocol][3]
 
 [1]: https://documents.blackmagicdesign.com/DeveloperManuals/VideohubDeveloperInformation.pdf
 [2]: https://github.com/gfto/videohubctrl
+[3]: https://www.youtube.com/watch?v=K3Jx0jbtick

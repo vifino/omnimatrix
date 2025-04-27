@@ -4,7 +4,8 @@ use crate::helpers::*;
 use crate::model::*;
 use bytes::BytesMut;
 use nom::{
-    bytes::streaming::{tag, take_until},
+    branch::alt,
+    bytes::streaming::{tag, tag_no_case, take_until},
     character::streaming::{multispace0, space1},
     error::{Error, ErrorKind, ParseError},
     sequence::{preceded, terminated, tuple},
@@ -27,8 +28,12 @@ fn parse_kv_line(i: &[u8]) -> IResult<&[u8], (&[u8], &[u8])> {
 
 /// Parse the body of a Preamble block after its header
 fn parse_preamble_body(i: &[u8]) -> IResult<&[u8], VideohubMessage> {
-    let (i, (_, _, ver, _)) =
-        tuple((tag(b"Version"), tag(COLON), take_until_newline, any_newline))(i)?;
+    let (i, (_, _, ver, _)) = tuple((
+        tag_no_case(b"Version"),
+        tag(COLON),
+        take_until_newline,
+        any_newline,
+    ))(i)?;
     let version = String::from_utf8_lossy(ver.trim_ascii()).to_string();
     Ok((i, VideohubMessage::Preamble(Preamble { version })))
 }
@@ -37,8 +42,9 @@ fn parse_preamble_body(i: &[u8]) -> IResult<&[u8], VideohubMessage> {
 fn parse_device_body(mut i: &[u8]) -> IResult<&[u8], VideohubMessage> {
     let mut di = DeviceInfo::default();
     while let Ok((i2, (k, v))) = parse_kv_line(i) {
-        match k {
-            b"Device present" => {
+        let lk = k.to_ascii_lowercase();
+        match &lk[..] {
+            b"device present" => {
                 di.present = Some(match v {
                     b"true" => Present::Yes,
                     b"false" => Present::No,
@@ -46,18 +52,18 @@ fn parse_device_body(mut i: &[u8]) -> IResult<&[u8], VideohubMessage> {
                     _ => return Err(Err::Error(Error::from_error_kind(i, ErrorKind::Tag))),
                 })
             }
-            b"Model name" => di.model_name = Some(String::from_utf8_lossy(v).to_string()),
-            b"Friendly name" => di.unique_id = Some(String::from_utf8_lossy(v).to_string()),
-            b"Unique ID" => di.unique_id = Some(String::from_utf8_lossy(v).to_string()),
-            b"Video inputs" => di.video_inputs = Some(parse_u32(v)?.1),
-            b"Video processing units" => di.video_processing_units = Some(parse_u32(v)?.1),
-            b"Video outputs" => di.video_outputs = Some(parse_u32(v)?.1),
-            b"Video monitoring outputs" => di.video_monitoring_outputs = Some(parse_u32(v)?.1),
-            b"Serial ports" => di.serial_ports = Some(parse_u32(v)?.1),
-            key => {
+            b"model name" => di.model_name = Some(String::from_utf8_lossy(v).to_string()),
+            b"friendly name" => di.unique_id = Some(String::from_utf8_lossy(v).to_string()),
+            b"unique id" => di.unique_id = Some(String::from_utf8_lossy(v).to_string()),
+            b"video inputs" => di.video_inputs = Some(parse_u32(v)?.1),
+            b"video processing units" => di.video_processing_units = Some(parse_u32(v)?.1),
+            b"video outputs" => di.video_outputs = Some(parse_u32(v)?.1),
+            b"video monitoring outputs" => di.video_monitoring_outputs = Some(parse_u32(v)?.1),
+            b"serial ports" => di.serial_ports = Some(parse_u32(v)?.1),
+            _ => {
                 let mut unknown = di.unknown_fields.unwrap_or_else(|| Vec::new());
                 unknown.push(UnknownKVPair {
-                    key: String::from_utf8_lossy(key).to_string(),
+                    key: String::from_utf8_lossy(k).to_string(),
                     value: String::from_utf8_lossy(v).to_string(),
                 });
                 di.unknown_fields = Some(unknown);
@@ -93,7 +99,10 @@ fn parse_route_body<'a>(
 ) -> IResult<&'a [u8], VideohubMessage> {
     let mut out = Vec::new();
     while let Ok((i2, (t, _, f, _))) = tuple((parse_u32, space1, parse_u32, any_newline))(i) {
-        out.push(Route { from_input: f, to_output: t });
+        out.push(Route {
+            from_input: f,
+            to_output: t,
+        });
         i = i2;
     }
     Ok((i, ctor(out)))
@@ -109,9 +118,9 @@ fn parse_lock_body<'a>(
         tuple((parse_u32, space1, take_until_newline, any_newline))(i)
     {
         let state = match s.trim_ascii_end() {
-            b"O" => LockState::Owned,
-            b"L" => LockState::Locked,
-            b"U" => LockState::Unlocked,
+            b"O" | b"o" => LockState::Owned,
+            b"L" | b"l" => LockState::Locked,
+            b"U" | b"u" => LockState::Unlocked,
             _ => return Err(Err::Error(Error::from_error_kind(i, ErrorKind::Tag))),
         };
         out.push(Lock { id, state });
@@ -126,16 +135,18 @@ fn parse_hw_body<'a>(
     ctor: fn(Vec<HardwarePort>) -> VideohubMessage,
 ) -> IResult<&'a [u8], VideohubMessage> {
     let mut out = Vec::new();
-    while let Ok((i2, (id, _, tp, _))) =
+    while let Ok((i2, (id, _, hw_type, _))) =
         tuple((parse_u32, space1, take_until_newline, any_newline))(i)
     {
-        let port_type = match tp.trim_ascii_end() {
-            b"None" => HardwarePortType::None,
-            b"BNC" => HardwarePortType::BNC,
-            b"Optical" => HardwarePortType::Optical,
-            b"Thunderbolt" => HardwarePortType::Thunderbolt,
-            b"RS422" => HardwarePortType::RS422,
-            unknown => HardwarePortType::Other(String::from_utf8_lossy(unknown).to_string()),
+        let tp = hw_type.trim_ascii_end();
+        let lp = tp.to_ascii_lowercase();
+        let port_type = match &lp[..] {
+            b"one" => HardwarePortType::None,
+            b"bnc" => HardwarePortType::BNC,
+            b"optical" => HardwarePortType::Optical,
+            b"thunderbolt" => HardwarePortType::Thunderbolt,
+            b"rs422" => HardwarePortType::RS422,
+            _ => HardwarePortType::Other(String::from_utf8_lossy(tp).to_string()),
         };
         out.push(HardwarePort { id, port_type });
         i = i2;
@@ -160,8 +171,10 @@ impl VideohubMessage {
     /// Parse one block including its trailing blank-line
     pub fn parse_single_block(i: &[u8]) -> IResult<&[u8], VideohubMessage> {
         let (i, header) = preceded(multispace0, terminated(take_until_newline, any_newline))(i)?;
-        let (i, body) = take_until_empty_line(i)?;
-        let (_, msg) = match header.trim_ascii_end() {
+        let (i, body) = alt((any_newline, take_until_empty_line))(i)?;
+        let trimmed_header = header.trim_ascii_end();
+        let screaming_header = trimmed_header.to_ascii_uppercase();
+        let (_, msg) = match &screaming_header[..] {
             b"PROTOCOL PREAMBLE:" => parse_preamble_body(body)?,
             b"VIDEOHUB DEVICE:" => parse_device_body(body)?,
 
@@ -227,9 +240,12 @@ impl VideohubMessage {
             b"PING:" => (i, VideohubMessage::Ping),
             b"END PRELUDE:" => (i, VideohubMessage::EndPrelude),
 
-            header => (
+            _ => (
                 b"".as_slice(),
-                VideohubMessage::UnknownMessage(BytesMut::from(header), BytesMut::from(body)),
+                VideohubMessage::UnknownMessage(
+                    BytesMut::from(trimmed_header),
+                    BytesMut::from(body),
+                ),
             ),
         };
         Ok((i, msg))
@@ -241,6 +257,8 @@ impl VideohubMessage {
         let mut messages = Vec::new();
         loop {
             let (ni, message) = Self::parse_single_block(i)?;
+            println!("ni: {:?}", String::from_utf8_lossy(ni));
+            println!("message: {:?}", message);
             messages.push(message);
             if ni.is_empty() {
                 return Ok((ni, messages));
@@ -254,7 +272,8 @@ impl VideohubMessage {
 mod tests {
     use super::*;
 
-    static BMD_EXAMPLE: &[u8] = include_bytes!("./bmd_example.txt");
+    const BMD_EXAMPLE: &[u8] = include_bytes!("./bmd_example.txt");
+    const BMD_CLEANSWITCH: &[u8] = include_bytes!("./bmd_cleanswitch_12x12.txt");
 
     #[test]
     fn parse_only_preamble() {
@@ -269,17 +288,32 @@ mod tests {
     }
 
     #[test]
+    fn parse_single_line() {
+        let buf = b"PING:\n\n";
+        let (rem, msg) = VideohubMessage::parse_single_block(buf).expect("should parse preamble");
+        // no leftover
+        assert!(rem.is_empty(), "remaining = {:?}", rem);
+        assert_eq!(msg, VideohubMessage::Ping);
+    }
+
+    #[test]
     fn parse_only_deviceinfo() {
         let buf = b"VIDEOHUB DEVICE:\r\n\
                     Device present: true\r\n\
-                    Model name: FooBar\r\n\
+                    Model name: foobar\r\n\
                     Video inputs: 3\r\n\r\n";
         let (rem, msg) = VideohubMessage::parse_single_block(buf).expect("should parse device");
         assert!(rem.is_empty(), "remaining = {:?}", rem);
+        let lower = buf.to_ascii_lowercase();
+        let (rem2, msg2) = VideohubMessage::parse_single_block(&lower[..])
+            .expect("should parse lower-case device");
+        assert!(rem2.is_empty(), "remaining = {:?}", rem);
+        assert_eq!(msg, msg2, "parsing should not depend on case");
+
         match msg {
             VideohubMessage::DeviceInfo(d) => {
                 assert!(matches!(d.present, Some(Present::Yes)));
-                assert_eq!(d.model_name.as_deref(), Some("FooBar"));
+                assert_eq!(d.model_name.as_deref(), Some("foobar"));
                 assert_eq!(d.video_inputs, Some(3));
             }
             _ => panic!("expected DeviceInfo, got {:?}", msg),
@@ -288,17 +322,23 @@ mod tests {
 
     #[test]
     fn parse_only_input_labels() {
-        let buf = b"INPUT LABELS:\r\n0 A\r\n1 B\r\n\r\n";
+        let buf = b"INPUT LABELS:\r\n0 a\r\n1  b \r\n\r\n";
         let (rem, msg) =
             VideohubMessage::parse_single_block(buf).expect("should parse input labels");
         assert!(rem.is_empty(), "remaining = {:?}", rem);
+        let lower = buf.to_ascii_lowercase();
+        let (rem2, msg2) = VideohubMessage::parse_single_block(&lower[..])
+            .expect("should parse lower-case input labels");
+        assert!(rem2.is_empty(), "remaining = {:?}", rem);
+        assert_eq!(msg, msg2, "parsing should not depend on case");
+
         match msg {
             VideohubMessage::InputLabels(v) => {
                 assert_eq!(v.len(), 2);
                 assert_eq!(v[0].id, 0);
-                assert_eq!(&v[0].name, "A");
+                assert_eq!(&v[0].name, "a");
                 assert_eq!(v[1].id, 1);
-                assert_eq!(&v[1].name, "B");
+                assert_eq!(&v[1].name, "b");
             }
             _ => panic!("expected InputLabels, got {:?}", msg),
         }
@@ -380,5 +420,91 @@ mod tests {
             }
             _ => panic!("expected OutputLabels"),
         }
+    }
+    #[test]
+    fn parse_bmd_example_but_lowercase() {
+        let lower_example = BMD_EXAMPLE.to_ascii_lowercase();
+        let (rem, msgs) = VideohubMessage::parse_all_blocks(&lower_example[..]).unwrap();
+        assert!(rem.is_empty(), "remaining = {:?}", rem);
+        assert_eq!(msgs.len(), 4);
+
+        match &msgs[0] {
+            VideohubMessage::Preamble(p) => assert_eq!(p.version, "2.4"),
+            _ => panic!("expected Preamble"),
+        }
+        match &msgs[1] {
+            VideohubMessage::DeviceInfo(d) => assert!(matches!(d.present, Some(Present::Yes))),
+            _ => panic!("expected DeviceInfo"),
+        }
+        match &msgs[2] {
+            VideohubMessage::InputLabels(v) => {
+                assert_eq!(v[0].id, 0);
+                assert_eq!(&v[0].name, "camera 1");
+            }
+            _ => panic!("expected InputLabels"),
+        }
+        match &msgs[3] {
+            VideohubMessage::OutputLabels(v) => {
+                assert_eq!(v[0].id, 0);
+                assert_eq!(&v[0].name, "main monitor 1");
+            }
+            _ => panic!("expected OutputLabels"),
+        }
+    }
+
+    #[test]
+    fn parse_bmd_cleanswitch() {
+        let (rem, msgs) = VideohubMessage::parse_all_blocks(BMD_CLEANSWITCH).unwrap();
+        assert!(rem.is_empty(), "remaining = {:?}", rem);
+        assert_eq!(msgs.len(), 8);
+
+        match &msgs[0] {
+            VideohubMessage::Preamble(p) => assert_eq!(p.version, "2.8"),
+            _ => panic!("expected Preamble"),
+        }
+        match &msgs[1] {
+            VideohubMessage::DeviceInfo(d) => assert!(matches!(d.present, Some(Present::Yes))),
+            _ => panic!("expected DeviceInfo"),
+        }
+        match &msgs[2] {
+            VideohubMessage::InputLabels(v) => {
+                assert_eq!(v[0].id, 0);
+                assert_eq!(&v[0].name, "HyperDeck 1");
+                assert_eq!(v.len(), 12);
+            }
+            _ => panic!("expected InputLabels"),
+        }
+        match &msgs[3] {
+            VideohubMessage::OutputLabels(v) => {
+                assert_eq!(v[0].id, 0);
+                assert_eq!(&v[0].name, "Teranex AV 1");
+                assert_eq!(v.len(), 12);
+            }
+            _ => panic!("expected OutputLabels"),
+        }
+        match &msgs[4] {
+            VideohubMessage::VideoOutputLocks(v) => {
+                assert_eq!(v[0].id, 0);
+                assert_eq!(v[0].state, LockState::Unlocked);
+                assert_eq!(v.len(), 12);
+            }
+            _ => panic!("expected VideoOutputLocks"),
+        }
+        match &msgs[5] {
+            VideohubMessage::VideoOutputRouting(v) => {
+                assert_eq!(v[0].to_output, 0);
+                assert_eq!(v[0].from_input, 6);
+                assert_eq!(v.len(), 12);
+            }
+            _ => panic!("expected VideoOutputLocks"),
+        }
+        match &msgs[6] {
+            VideohubMessage::Configuration(v) => {
+                assert_eq!(&v[0].setting, "Take Mode");
+                assert_eq!(&v[0].value, "false");
+            }
+            _ => panic!("expected VideoOutputLocks"),
+        }
+        assert_eq!(&msgs[7], &VideohubMessage::EndPrelude);
     }
 }

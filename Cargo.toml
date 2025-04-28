@@ -13,6 +13,9 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.98"
 futures-core = "0.3.31"
+futures-util = { version = "0.3.31", features = ["sink"] }
 tokio = { version = "1.44.2", features = ["rt-multi-thread", "time", "macros"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
-
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+videohub = { version = "0.1.0", path = "crates/videohub" }

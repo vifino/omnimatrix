@@ -1,5 +1,6 @@
 use super::model::*;
 use anyhow::Result;
+use futures_core::stream::BoxStream;
 use std::future::Future;
 
 /// Matrix Router Abstraction.
@@ -27,28 +28,52 @@ pub trait MatrixRouter: Send + Sync {
     ///
     /// This information generally should not change too frequently
     /// and might be cached.
-    fn get_router_matrix_info(
+    fn get_matrix_info(
         &self,
         index: u32,
     ) -> impl Future<Output = Result<RouterMatrixInfo>> + Send + Sync;
 
-    /// Get Input and Output Labels.
+    /// Get Input Labels.
     ///
     /// This information may be cached depending on the implementation,
     /// but should definitely be made optional.
-    fn get_labels(&self, index: u32) -> impl Future<Output = Result<RouterLabels>> + Send + Sync;
-
-    /// Update Input and Output Labels.
-    ///
-    /// The provided changed labels will be merged with the existing labels.
-    fn update_labels(
+    fn get_input_labels(
         &self,
         index: u32,
-        changed: RouterLabels,
+    ) -> impl Future<Output = Result<Vec<RouterLabel>>> + Send + Sync;
+
+    /// Get Output Labels.
+    ///
+    /// This information may be cached depending on the implementation,
+    /// but should definitely be made optional.
+    fn get_output_labels(
+        &self,
+        index: u32,
+    ) -> impl Future<Output = Result<Vec<RouterLabel>>> + Send + Sync;
+
+    /// Update Input Labels.
+    ///
+    /// The provided changed labels will be merged with the existing labels.
+    fn update_input_labels(
+        &self,
+        index: u32,
+        changed: Vec<RouterLabel>,
+    ) -> impl Future<Output = Result<()>> + Send + Sync;
+
+    /// Update Output Labels.
+    ///
+    /// The provided changed labels will be merged with the existing labels.
+    fn update_output_labels(
+        &self,
+        index: u32,
+        changed: Vec<RouterLabel>,
     ) -> impl Future<Output = Result<()>> + Send + Sync;
 
     /// Get currently patched routes.
-    fn get_routes(&self, index: u32) -> impl Future<Output = Result<Vec<Patch>>> + Send + Sync;
+    fn get_routes(
+        &self,
+        index: u32,
+    ) -> impl Future<Output = Result<Vec<RouterPatch>>> + Send + Sync;
 
     /// Update patched routes.
     ///
@@ -56,7 +81,7 @@ pub trait MatrixRouter: Send + Sync {
     fn update_routes(
         &self,
         index: u32,
-        changes: Vec<Patch>,
+        changes: Vec<RouterPatch>,
     ) -> impl Future<Output = Result<()>> + Send + Sync;
 
     // TODO: get/update locks?
@@ -67,7 +92,7 @@ pub trait MatrixRouter: Send + Sync {
     ///
     /// This is the main way to get updates or changes happening outside of
     /// explicitly requesting them.
-    fn event_stream(
-        &self,
-    ) -> impl Future<Output = Result<impl futures_core::Stream<Item = RouterEvent>>> + Send + Sync;
+    fn event_stream<'a>(
+        &'a self,
+    ) -> impl Future<Output = Result<BoxStream<'a, RouterEvent>>> + Send + Sync;
 }

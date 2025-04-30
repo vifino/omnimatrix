@@ -257,8 +257,6 @@ impl VideohubMessage {
         let mut messages = Vec::new();
         loop {
             let (ni, message) = Self::parse_single_block(i)?;
-            println!("ni: {:?}", String::from_utf8_lossy(ni));
-            println!("message: {:?}", message);
             messages.push(message);
             if ni.is_empty() {
                 return Ok((ni, messages));

@@ -6,7 +6,7 @@
 - [ ] Generic Matrix Router Data Model and helpers
 - [ ] Generic Matrix Router Trait
 - [ ] Implement front-ends:
-  - [ ] Videohub
+  - [x] Videohub
   - [ ] Custom Websocket Protocol?
 - [ ] Implement Backends:
   - [ ] Videohub

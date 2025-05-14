@@ -212,9 +212,7 @@ where
                     Some(self.gen_inputlabels().await?)
                 } else {
                     let changed = labels.into_iter().map(|l| l.into()).collect();
-                    self.router
-                        .update_input_labels(self.index, changed)
-                        .await?;
+                    self.router.update_input_labels(self.index, changed).await?;
                     Some(VideohubMessage::ACK)
                 }
             }
@@ -248,6 +246,26 @@ where
     async fn handle_event(&self, event: RouterEvent) -> Result<Option<VideohubMessage>> {
         // TODO: translate stuff like route-change events
         Ok(match event {
+            RouterEvent::InputLabelUpdate(idx, mut updates) => {
+                if idx != self.index {
+                    None
+                } else {
+                    updates.sort_by(|a, b| a.id.cmp(&b.id)); // Enforce 0 to X
+                    Some(VideohubMessage::InputLabels(
+                        updates.into_iter().map(|r| r.into()).collect(),
+                    ))
+                }
+            }
+            RouterEvent::OutputLabelUpdate(idx, mut updates) => {
+                if idx != self.index {
+                    None
+                } else {
+                    updates.sort_by(|a, b| a.id.cmp(&b.id)); // Enforce 0 to X
+                    Some(VideohubMessage::InputLabels(
+                        updates.into_iter().map(|r| r.into()).collect(),
+                    ))
+                }
+            }
             RouterEvent::RouteUpdate(idx, mut updates) => {
                 if idx != self.index {
                     None

@@ -3,13 +3,15 @@
   - [ ] Leitch Pass-through Protocol
   - [ ] Leitch Terminal Protocol
   - [ ] ATEN Video Matrix Switcher Protocol?
-- [ ] Generic Matrix Router Data Model and helpers
-- [ ] Generic Matrix Router Trait
+  - [ ] Probel SWP-08?
+- [x] Generic Matrix Router Data Model and helpers
+- [x] Generic Matrix Router Trait
 - [ ] Implement front-ends:
   - [x] Videohub
-  - [ ] Custom Websocket Protocol?
+  - [ ] Custom protocol
+    - Websocket? OSC?
 - [ ] Implement Backends:
-  - [ ] Videohub
+  - [x] Videohub
   - [ ] Leitch Pass-through Protocol
   - [ ] Leitch Terminal Protocol
   - [ ] ATEN Video Matrix Switcher Protocol?

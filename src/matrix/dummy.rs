@@ -225,10 +225,7 @@ impl MatrixRouter for DummyRouter {
 
     async fn event_stream<'a>(&'a self) -> Result<BoxStream<'a, RouterEvent>> {
         let bs = BroadcastStream::new(self.tx.subscribe());
-        let simple = bs.filter_map(|r| match r {
-            Ok(e) => Some(e),
-            Err(_) => None,
-        });
+        let simple = bs.filter_map(|r| r.ok());
         Ok(futures_util::StreamExt::boxed(simple))
     }
 }

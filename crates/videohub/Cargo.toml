@@ -1,6 +1,6 @@
 [package]
 name = "videohub"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Adrian 'vifino' Pistol <vifino@posteo.net>"]
 description = "Blackmagic Videohub Control Protocol Codec"
 homepage = "https://github.com/vifino/omnimatrix/tree/main/crates/videohub"
@@ -15,7 +15,6 @@ default = ["codec"]
 anyhow = { version = "1.0.75" }
 bytes = "1.5"
 nom = "7"
-tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7.15", features = ["codec"], optional = true }
 version-compare = "0.2.0"
 

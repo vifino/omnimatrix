@@ -38,36 +38,34 @@ impl DummyRouter {
             matrix_count
         ];
 
-        let mut input_labels = Vec::new();
-        for n in 0..input_count {
-            input_labels.push(RouterLabel {
+        let input_labels: Vec<RouterLabel> = (0..input_count)
+            .map(|n| RouterLabel {
                 id: n as u32,
                 name: format!("Input {}", n + 1),
             })
-        }
-        let mut output_labels = Vec::new();
-        for n in 0..output_count {
-            output_labels.push(RouterLabel {
+            .collect();
+
+        let output_labels: Vec<RouterLabel> = (0..output_count)
+            .map(|n| RouterLabel {
                 id: n as u32,
                 name: format!("Output {}", n + 1),
             })
-        }
+            .collect();
 
-        let mut patches = Vec::new();
-        for n in 0..output_count {
-            patches.push(RouterPatch {
+        let patches: Vec<RouterPatch> = (0..output_count)
+            .map(|n| RouterPatch {
                 from_input: 0,
                 to_output: n as u32,
-            });
-        }
-        let routes = vec![patches; matrix_count];
+            })
+            .collect();
+
         let state = State {
             is_alive: true,
             info,
             matrix_info,
             input_labels: vec![input_labels; matrix_count],
             output_labels: vec![output_labels; matrix_count],
-            routes,
+            routes: vec![patches; matrix_count],
         };
         let (tx, _) = broadcast::channel(16);
         DummyRouter {

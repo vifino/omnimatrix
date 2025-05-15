@@ -1,5 +1,4 @@
-use omnimatrix::frontend::VideohubFrontend;
-use omnimatrix::matrix::DummyRouter;
+use omnimatrix::{backend::NDIRouter, frontend::VideohubFrontend};
 use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::{
@@ -21,8 +20,8 @@ async fn main() {
 
     info!("omnimatrix starting up!");
 
-    let dummy = Arc::new(DummyRouter::with_config(1, 16, 16));
-    let videohub = VideohubFrontend::new(dummy, 0);
+    let router = Arc::new(NDIRouter::new("OmniRouter", vec!["Public"], 32, 4).unwrap());
+    let videohub = VideohubFrontend::new(router, 0);
 
     videohub
         .listen("0.0.0.0:9990".parse().unwrap())

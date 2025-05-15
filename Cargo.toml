@@ -15,9 +15,10 @@ anyhow = "1.0.98"
 async-stream = "0.3.6"
 futures-core = "0.3.31"
 futures-util = { version = "0.3.31", features = ["sink"] }
-tokio = { version = "1.44.2", features = ["rt-multi-thread", "time", "macros"] }
+ndi-sdk = "0.2.0"
+tokio = { version = "1.44.2", features = ["rt-multi-thread", "time", "macros", "net"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
 tokio-util = { version = "0.7.15", features = ["codec"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-videohub = { version = "0.1.0", path = "crates/videohub" }
+videohub = { version = "1.0.0", path = "crates/videohub" }

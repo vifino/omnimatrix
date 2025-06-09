@@ -3,6 +3,7 @@ name = "videohub"
 version = "1.0.1"
 authors = ["Adrian 'vifino' Pistol <vifino@posteo.net>"]
 description = "Blackmagic Videohub Control Protocol Codec"
+repository = "https://github.com/vifino/omnimatrix/"
 homepage = "https://github.com/vifino/omnimatrix/tree/main/crates/videohub"
 license = "MIT"
 edition = "2021"

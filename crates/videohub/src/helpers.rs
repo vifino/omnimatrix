@@ -44,7 +44,7 @@ pub fn take_until_empty_line(i: &[u8]) -> IResult<&[u8], &[u8]> {
 pub fn parse_u32(i: &[u8]) -> IResult<&[u8], u32> {
     map_res(char_comp::digit1, |d: &[u8]| {
         // Due to digit1 allowing only [0-9]+, the unwrap will never error.
-        str::from_utf8(d).unwrap().parse()
+        std::str::from_utf8(d).unwrap().parse()
     })(i)
 }
 
